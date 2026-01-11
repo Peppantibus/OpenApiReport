@@ -1,0 +1,73 @@
+# =========================
+# .NET / C#
+# =========================
+bin/
+obj/
+out/
+
+# Rider / Visual Studio
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
+
+# Test results
+TestResults/
+coverage/
+coverage.*.xml
+
+# dotnet tool restore artifacts
+.dotnet/
+tools/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/packages/
+.nuget/fallbackpackages/
+
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+
+# =========================
+# Logs / temp
+# =========================
+*.log
+*.tmp
+*.temp
+
+# =========================
+# OpenAPI Report outputs
+# =========================
+openapi-report*.json
+openapi-report*.md
+openapi-report*.txt
+reports/
+artifacts/
+
+# =========================
+# Environment / secrets
+# =========================
+.env
+.env.*
+secrets.json
+appsettings.Development.json
+
+# =========================
+# CI local artifacts
+# =========================
+.github/workflows/*.local.yml
