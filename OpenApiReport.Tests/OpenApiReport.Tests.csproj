@@ -25,4 +25,8 @@
     <ProjectReference Include="..\OpenAPI.Cli\OpenApiReport.Cli.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Fixtures\markdown-report.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
