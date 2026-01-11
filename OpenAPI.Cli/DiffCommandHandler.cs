@@ -77,7 +77,7 @@ public sealed class DiffCommandHandler
                 "text" => ReportFormatters.FormatText(summary, changes),
                 "md" => ReportFormatters.FormatMarkdown(summary, changes),
                 "markdown" => ReportFormatters.FormatMarkdown(summary, changes),
-                "json" => ReportFormatters.FormatJson(summary, changes),
+                "json" => ReportFormatters.FormatJson(summary, changes, oldSpecPath, newSpecPath, DateTimeOffset.UtcNow),
                 _ => throw new InvalidOperationException($"Unknown format '{format}'.")
             };
 

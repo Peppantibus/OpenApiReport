@@ -79,17 +79,51 @@ public static class ReportFormatters
         return builder.ToString();
     }
 
-    public static string FormatJson(DiffSummary summary, IReadOnlyList<ChangeRecord> changes)
+    public static string FormatJson(
+        DiffSummary summary,
+        IReadOnlyList<ChangeRecord> changes,
+        string? oldSpecPath = null,
+        string? newSpecPath = null,
+        DateTimeOffset? generatedAtUtc = null)
     {
+        var orderedChanges = OrderChanges(changes);
+        var topChanges = BuildTopChanges(orderedChanges, summary.TopByRisk);
+
         var payload = new
         {
-            summary = summary,
-            changes = changes
+            generatedAtUtc = generatedAtUtc ?? DateTimeOffset.UtcNow,
+            oldSpecPath,
+            newSpecPath,
+            summary = new
+            {
+                summary.Breaking,
+                summary.Risky,
+                summary.Additive,
+                summary.Cosmetic,
+                summary.Total
+            },
+            topChanges,
+            changes = orderedChanges.Select(change => new
+            {
+                category = change.Severity.ToString(),
+                change.Title,
+                change.Tag,
+                change.Endpoint,
+                Method = GetEndpointMethod(change.Endpoint),
+                Path = GetEndpointPath(change.Endpoint),
+                change.Pointer,
+                change.Before,
+                change.After,
+                change.Meaning,
+                change.SuggestedAction,
+                change.RiskScore
+            })
         };
 
         return JsonSerializer.Serialize(payload, new JsonSerializerOptions
         {
-            WriteIndented = true
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
     }
 
@@ -107,12 +141,7 @@ public static class ReportFormatters
 
     private static void AppendGroupedDetails(StringBuilder builder, IReadOnlyList<ChangeRecord> changes, bool isMarkdown)
     {
-        var orderedChanges = changes
-            .OrderBy(change => Array.IndexOf(SeverityOrder, change.Severity))
-            .ThenBy(change => change.Tag, StringComparer.Ordinal)
-            .ThenBy(change => change.Endpoint, StringComparer.Ordinal)
-            .ThenBy(change => change.Title, StringComparer.Ordinal)
-            .ToList();
+        var orderedChanges = OrderChangesForGrouping(changes);
 
         var severityGroups = orderedChanges.GroupBy(change => change.Severity);
         foreach (var severityGroup in severityGroups)
@@ -174,5 +203,65 @@ public static class ReportFormatters
 
             builder.AppendLine();
         }
+    }
+
+    private static List<ChangeRecord> OrderChanges(IReadOnlyList<ChangeRecord> changes)
+    {
+        return changes
+            .OrderBy(change => Array.IndexOf(SeverityOrder, change.Severity))
+            .ThenByDescending(change => change.RiskScore)
+            .ThenBy(change => change.Tag, StringComparer.Ordinal)
+            .ThenBy(change => change.Endpoint, StringComparer.Ordinal)
+            .ThenBy(change => change.Title, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    private static List<ChangeRecord> OrderChangesForGrouping(IReadOnlyList<ChangeRecord> changes)
+    {
+        return changes
+            .OrderBy(change => Array.IndexOf(SeverityOrder, change.Severity))
+            .ThenBy(change => change.Tag, StringComparer.Ordinal)
+            .ThenBy(change => change.Endpoint, StringComparer.Ordinal)
+            .ThenBy(change => change.Title, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    private static List<object> BuildTopChanges(IReadOnlyList<ChangeRecord> orderedChanges, int count)
+    {
+        return orderedChanges
+            .Take(count)
+            .Select(change => new
+            {
+                category = change.Severity.ToString(),
+                change.Title,
+                Method = GetEndpointMethod(change.Endpoint),
+                Path = GetEndpointPath(change.Endpoint),
+                change.Pointer,
+                change.RiskScore
+            })
+            .Cast<object>()
+            .ToList();
+    }
+
+    private static string? GetEndpointMethod(string endpoint)
+    {
+        var index = endpoint.IndexOf(' ');
+        if (index <= 0)
+        {
+            return null;
+        }
+
+        return endpoint[..index];
+    }
+
+    private static string? GetEndpointPath(string endpoint)
+    {
+        var index = endpoint.IndexOf(' ');
+        if (index < 0 || index + 1 >= endpoint.Length)
+        {
+            return endpoint;
+        }
+
+        return endpoint[(index + 1)..];
     }
 }
