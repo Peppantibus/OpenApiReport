@@ -45,10 +45,16 @@ public sealed class CaptureCommandHandler
                 return 1;
             }
 
+            var projectPath = input.ProjectPath ?? config?.Project;
+            if (mode == CaptureMode.Swashbuckle)
+            {
+                projectPath = ProjectLocator.ResolveProjectPath(projectPath, Environment.CurrentDirectory);
+            }
+
             var options = new CaptureOptions
             {
                 Mode = mode,
-                ProjectPath = input.ProjectPath ?? config?.Project,
+                ProjectPath = projectPath,
                 Configuration = input.Configuration ?? config?.Configuration ?? "Release",
                 Framework = input.Framework ?? config?.Framework,
                 SwaggerDoc = input.SwaggerDoc ?? config?.SwaggerDoc ?? "v1",

@@ -1,4 +1,5 @@
 using OpenApiReport.Cli;
+
 namespace OpenApiReport.Tests;
 
 public class SnapshotDiffCommandHandlerTests

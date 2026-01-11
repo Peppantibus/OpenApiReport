@@ -5,6 +5,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>openapi-report</ToolCommandName>
+    <PackageId>OpenApiReport.Tool</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>OpenApiReport</Authors>
+    <Description>Generate semantic OpenAPI change reports.</Description>
   </PropertyGroup>
 
   <ItemGroup>

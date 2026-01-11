@@ -251,10 +251,16 @@ public sealed class SnapshotDiffCommandHandler
             return null;
         }
 
+        var projectPath = input.ProjectPath ?? config?.Project;
+        if (mode == CaptureMode.Swashbuckle)
+        {
+            projectPath = ProjectLocator.ResolveProjectPath(projectPath, repoRoot);
+        }
+
         var captureOptions = new CaptureOptions
         {
             Mode = mode,
-            ProjectPath = input.ProjectPath ?? config?.Project,
+            ProjectPath = projectPath,
             Configuration = input.Configuration ?? config?.Configuration ?? "Release",
             Framework = input.Framework ?? config?.Framework,
             SwaggerDoc = input.SwaggerDoc ?? config?.SwaggerDoc ?? "v1",

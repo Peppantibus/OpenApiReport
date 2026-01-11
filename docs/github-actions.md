@@ -20,6 +20,9 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Install OpenApiReport tool
+        run: dotnet tool install --global OpenApiReport.Tool
+
       - name: Run snapshot diff (Swashbuckle)
         run: |
           openapi-report snapshot-diff \
@@ -92,6 +95,9 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+
+      - name: Install OpenApiReport tool
+        run: dotnet tool install --global OpenApiReport.Tool
 
       - name: Run snapshot diff (URL capture)
         run: |

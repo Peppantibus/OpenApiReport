@@ -44,6 +44,12 @@ public static class OpenApiReportConfigLoader
         });
     }
 
+    public static string ResolveConfigPathOrDefault(string? configFilePath, string? baseDirectory)
+    {
+        return ResolveConfigPath(configFilePath, baseDirectory)
+            ?? Path.Combine(baseDirectory ?? Environment.CurrentDirectory, "openapi-report.json");
+    }
+
     private static string? ResolveConfigPath(string? configFilePath, string? baseDirectory)
     {
         if (!string.IsNullOrWhiteSpace(configFilePath))

@@ -13,6 +13,24 @@ breaking changes, risky changes, additive changes, and cosmetic changes.
 - Suggest **actions or migration notes**
 - Produce CI-friendly exit codes and machine-readable output
 
+## Install (dotnet tool)
+```bash
+dotnet tool install --global OpenApiReport.Tool
+```
+
+## Quick start
+Generate a config with sensible defaults (Swashbuckle + current repo):
+
+```bash
+openapi-report init
+```
+
+Then run a snapshot diff with minimal flags:
+
+```bash
+openapi-report snapshot-diff --base-ref origin/main --head-ref HEAD
+```
+
 ## Usage
 Generate a semantic diff between two OpenAPI specs:
 
