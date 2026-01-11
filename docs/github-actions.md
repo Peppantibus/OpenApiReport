@@ -20,6 +20,9 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Install OpenApiReport tool
+        run: dotnet tool install --global OpenApiReport.Tool
+
       - name: Run snapshot diff (Swashbuckle)
         run: |
           openapi-report snapshot-diff \
@@ -31,6 +34,13 @@ jobs:
             --out-dir ./reports/openapi \
             --formats md,json \
             --fail-on-breaking
+
+      - name: Run snapshot diff (config file)
+        run: |
+          openapi-report snapshot-diff \
+            --config-file ./openapi-report.json \
+            --base-ref ${{ github.event.pull_request.base.sha }} \
+            --head-ref ${{ github.event.pull_request.head.sha }}
 
       - name: Report location
         run: |
@@ -85,6 +95,9 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+
+      - name: Install OpenApiReport tool
+        run: dotnet tool install --global OpenApiReport.Tool
 
       - name: Run snapshot diff (URL capture)
         run: |

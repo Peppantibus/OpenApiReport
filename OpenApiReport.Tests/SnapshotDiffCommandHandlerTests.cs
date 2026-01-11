@@ -1,4 +1,5 @@
 using OpenApiReport.Cli;
+
 namespace OpenApiReport.Tests;
 
 public class SnapshotDiffCommandHandlerTests
@@ -41,6 +42,52 @@ public class SnapshotDiffCommandHandlerTests
         Assert.True(File.Exists(Path.Combine(reportDir, "openapi.diff.md")));
         Assert.True(File.Exists(Path.Combine(reportDir, "openapi.diff.json")));
         Assert.Contains("breaking=", output.ToString());
+    }
+
+    [Fact]
+    public void SnapshotDiff_UsesConfigFileDefaults()
+    {
+        var tempRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var configPath = Path.Combine(tempRoot, "openapi-report.json");
+        var outDir = Path.Combine(tempRoot, "reports");
+
+        File.WriteAllText(configPath, """
+        {
+          "mode": "url",
+          "url": "https://example.test/swagger.json",
+          "snapshotDiff": {
+            "baseRef": "base-config",
+            "headRef": "head-config",
+            "outDir": "reports",
+            "projectName": "chat-api",
+            "formats": [ "md", "json" ],
+            "failOnBreaking": true
+          }
+        }
+        """);
+
+        var gitClient = new FakeGitClient(tempRoot);
+        var capture = new FakeCapture();
+        var handler = new SnapshotDiffCommandHandler(gitClient, capture);
+
+        var args = new[]
+        {
+            "snapshot-diff",
+            "--config-file",
+            configPath
+        };
+
+        var output = new StringWriter();
+        var error = new StringWriter();
+
+        var exitCode = handler.Execute(args, output, error);
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(new[] { "base-config", "head-config", "main" }, gitClient.Checkouts);
+        var reportDir = Path.Combine(outDir, "chat-api");
+        Assert.True(File.Exists(Path.Combine(reportDir, "openapi.diff.md")));
+        Assert.True(File.Exists(Path.Combine(reportDir, "openapi.diff.json")));
     }
 
     private sealed class FakeGitClient : IGitClient

@@ -22,7 +22,7 @@ public sealed class SnapshotDiffCommandHandler
     {
         if (args.Length == 0 || !string.Equals(args[0], "snapshot-diff", StringComparison.OrdinalIgnoreCase))
         {
-            errorOutput.WriteLine("Usage: openapi-report snapshot-diff --mode <swashbuckle|nswag|url> --base-ref <git-ref> --head-ref <git-ref> [options]");
+            errorOutput.WriteLine("Usage: openapi-report snapshot-diff [--mode <swashbuckle|nswag|url>] --base-ref <git-ref> --head-ref <git-ref> [options]");
             return 1;
         }
 
@@ -120,13 +120,14 @@ public sealed class SnapshotDiffCommandHandler
         var formats = new List<string> { "md", "json" };
         var failOnBreaking = false;
 
-        var parseResult = CaptureArgumentParser.Parse(args, requireOutput: false, allowUnknownArguments: true, errorOutput);
-        if (parseResult is null)
+        var input = CaptureArgumentParser.Parse(args, allowUnknownArguments: true, errorOutput);
+        if (input is null)
         {
             return null;
         }
 
-        var captureOptions = parseResult.Value.Options;
+        var repoRoot = _gitClient.GetRepositoryRoot();
+        var config = OpenApiReportConfigLoader.LoadIfExists(input.ConfigFilePath, repoRoot);
 
         for (var index = 1; index < args.Length; index++)
         {
@@ -207,6 +208,31 @@ public sealed class SnapshotDiffCommandHandler
             }
         }
 
+        baseRef = string.IsNullOrWhiteSpace(baseRef) ? config?.SnapshotDiff?.BaseRef ?? string.Empty : baseRef;
+        headRef = string.IsNullOrWhiteSpace(headRef) ? config?.SnapshotDiff?.HeadRef ?? string.Empty : headRef;
+        workDir ??= config?.SnapshotDiff?.WorkDir;
+        outDir ??= config?.SnapshotDiff?.OutDir;
+        projectName ??= config?.SnapshotDiff?.ProjectName;
+        if (config?.SnapshotDiff?.Formats is { Count: > 0 } && formats.SequenceEqual(new[] { "md", "json" }))
+        {
+            formats = config.SnapshotDiff.Formats.Select(format => format.ToLowerInvariant()).ToList();
+        }
+
+        if (config?.SnapshotDiff?.FailOnBreaking is not null && !failOnBreaking)
+        {
+            failOnBreaking = config.SnapshotDiff.FailOnBreaking.Value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(outDir) && !Path.IsPathRooted(outDir))
+        {
+            outDir = Path.Combine(repoRoot, outDir);
+        }
+
+        if (!string.IsNullOrWhiteSpace(workDir) && !Path.IsPathRooted(workDir))
+        {
+            workDir = Path.Combine(repoRoot, workDir);
+        }
+
         if (string.IsNullOrWhiteSpace(baseRef) || string.IsNullOrWhiteSpace(headRef))
         {
             errorOutput.WriteLine("Error: --base-ref and --head-ref are required.");
@@ -218,16 +244,44 @@ public sealed class SnapshotDiffCommandHandler
             formats.Add("md");
         }
 
+        var modeValue = input.Mode ?? config?.Mode ?? "swashbuckle";
+        if (!Enum.TryParse<CaptureMode>(modeValue, ignoreCase: true, out var mode))
+        {
+            errorOutput.WriteLine($"Error: unknown mode '{modeValue}'.");
+            return null;
+        }
+
+        var projectPath = input.ProjectPath ?? config?.Project;
+        if (mode == CaptureMode.Swashbuckle)
+        {
+            projectPath = ProjectLocator.ResolveProjectPath(projectPath, repoRoot);
+        }
+
+        var captureOptions = new CaptureOptions
+        {
+            Mode = mode,
+            ProjectPath = projectPath,
+            Configuration = input.Configuration ?? config?.Configuration ?? "Release",
+            Framework = input.Framework ?? config?.Framework,
+            SwaggerDoc = input.SwaggerDoc ?? config?.SwaggerDoc ?? "v1",
+            NswagConfigPath = input.NswagConfigPath ?? config?.NswagConfig,
+            Url = input.Url ?? config?.Url,
+            Headers = input.Headers.Count > 0
+                ? input.Headers
+                : config?.Headers?.Select(pair => new KeyValuePair<string, string>(pair.Key, pair.Value)).ToList()
+                ?? new List<KeyValuePair<string, string>>()
+        };
+
         return new SnapshotDiffOptions
         {
             BaseRef = baseRef,
             HeadRef = headRef,
             WorkDir = workDir,
-            OutDir = outDir ?? Path.Combine(_gitClient.GetRepositoryRoot(), "reports", "openapi"),
+            OutDir = outDir ?? Path.Combine(repoRoot, "reports", "openapi"),
             Formats = formats,
             FailOnBreaking = failOnBreaking,
             CaptureOptions = captureOptions,
-            ProjectName = projectName ?? new DirectoryInfo(_gitClient.GetRepositoryRoot()).Name
+            ProjectName = projectName ?? new DirectoryInfo(repoRoot).Name
         };
     }
 

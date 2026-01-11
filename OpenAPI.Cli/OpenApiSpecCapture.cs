@@ -230,7 +230,7 @@ public sealed class OpenApiSpecCapture : IOpenApiSpecCapture
             using var document = JsonDocument.Parse(content);
             if (TryFindJsonOutput(document.RootElement, out var output))
             {
-                return ResolveConfigRelativePath(configPath, output!);
+                return ResolveConfigRelativePath(configPath, output);
             }
         }
         else if (extension is ".yaml" or ".yml")

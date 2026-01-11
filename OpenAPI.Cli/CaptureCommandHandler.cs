@@ -18,26 +18,55 @@ public sealed class CaptureCommandHandler
     {
         if (args.Length == 0 || !string.Equals(args[0], "capture", StringComparison.OrdinalIgnoreCase))
         {
-            errorOutput.WriteLine("Usage: openapi-report capture --mode <swashbuckle|nswag|url> --out <file> [options]");
+            errorOutput.WriteLine("Usage: openapi-report capture [--mode <swashbuckle|nswag|url>] [--config-file <path>] --out <file> [options]");
             return 1;
         }
 
         try
         {
-            var parseResult = CaptureArgumentParser.Parse(args, requireOutput: false, allowUnknownArguments: false, errorOutput);
-            if (parseResult is null)
+            var input = CaptureArgumentParser.Parse(args, allowUnknownArguments: false, errorOutput);
+            if (input is null)
             {
                 return 1;
             }
 
-            var outputPath = parseResult.Value.OutputPath;
-            if (parseResult.Value.Options.Mode != CaptureMode.Nswag && string.IsNullOrWhiteSpace(outputPath))
+            var config = OpenApiReportConfigLoader.LoadIfExists(input.ConfigFilePath, Environment.CurrentDirectory);
+            var modeValue = input.Mode ?? config?.Mode ?? "swashbuckle";
+            if (!Enum.TryParse<CaptureMode>(modeValue, ignoreCase: true, out var mode))
+            {
+                errorOutput.WriteLine($"Error: unknown mode '{modeValue}'.");
+                return 1;
+            }
+
+            var outputPath = input.OutputPath ?? config?.Output;
+            if (mode != CaptureMode.Nswag && string.IsNullOrWhiteSpace(outputPath))
             {
                 errorOutput.WriteLine("Error: --out is required.");
                 return 1;
             }
 
-            _capture.Capture(parseResult.Value.Options, outputPath);
+            var projectPath = input.ProjectPath ?? config?.Project;
+            if (mode == CaptureMode.Swashbuckle)
+            {
+                projectPath = ProjectLocator.ResolveProjectPath(projectPath, Environment.CurrentDirectory);
+            }
+
+            var options = new CaptureOptions
+            {
+                Mode = mode,
+                ProjectPath = projectPath,
+                Configuration = input.Configuration ?? config?.Configuration ?? "Release",
+                Framework = input.Framework ?? config?.Framework,
+                SwaggerDoc = input.SwaggerDoc ?? config?.SwaggerDoc ?? "v1",
+                NswagConfigPath = input.NswagConfigPath ?? config?.NswagConfig,
+                Url = input.Url ?? config?.Url,
+                Headers = input.Headers.Count > 0
+                    ? input.Headers
+                    : config?.Headers?.Select(pair => new KeyValuePair<string, string>(pair.Key, pair.Value)).ToList()
+                    ?? new List<KeyValuePair<string, string>>()
+            };
+
+            _capture.Capture(options, outputPath);
             if (!string.IsNullOrWhiteSpace(outputPath))
             {
                 output.WriteLine($"Captured OpenAPI spec to {outputPath}.");

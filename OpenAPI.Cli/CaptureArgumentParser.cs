@@ -2,20 +2,20 @@ namespace OpenApiReport.Cli;
 
 public static class CaptureArgumentParser
 {
-    public static (CaptureOptions Options, string? OutputPath)? Parse(
+    public static CaptureInput? Parse(
         string[] args,
-        bool requireOutput,
         bool allowUnknownArguments,
         TextWriter errorOutput)
     {
-        CaptureMode? mode = null;
+        string? mode = null;
         string? outputPath = null;
         string? projectPath = null;
-        string configuration = "Release";
+        string? configuration = null;
         string? framework = null;
-        string swaggerDoc = "v1";
+        string? swaggerDoc = null;
         string? nswagConfig = null;
         string? url = null;
+        string? configFilePath = null;
         var headers = new List<KeyValuePair<string, string>>();
 
         for (var index = 1; index < args.Length; index++)
@@ -28,13 +28,7 @@ public static class CaptureArgumentParser
                     return null;
                 }
 
-                if (!Enum.TryParse<CaptureMode>(value, ignoreCase: true, out var parsedMode))
-                {
-                    errorOutput.WriteLine($"Error: unknown mode '{value}'.");
-                    return null;
-                }
-
-                mode = parsedMode;
+                mode = value;
                 continue;
             }
 
@@ -47,6 +41,17 @@ public static class CaptureArgumentParser
                 }
 
                 outputPath = value;
+                continue;
+            }
+
+            if (string.Equals(current, "--config-file", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!TryReadValue(args, ref index, errorOutput, out var value))
+                {
+                    return null;
+                }
+
+                configFilePath = value;
                 continue;
             }
 
@@ -141,21 +146,11 @@ public static class CaptureArgumentParser
             }
         }
 
-        if (!mode.HasValue)
+        return new CaptureInput
         {
-            errorOutput.WriteLine("Error: --mode is required.");
-            return null;
-        }
-
-        if (requireOutput && string.IsNullOrWhiteSpace(outputPath))
-        {
-            errorOutput.WriteLine("Error: --out is required.");
-            return null;
-        }
-
-        var options = new CaptureOptions
-        {
-            Mode = mode.Value,
+            Mode = mode,
+            OutputPath = outputPath,
+            ConfigFilePath = configFilePath,
             ProjectPath = projectPath,
             Configuration = configuration,
             Framework = framework,
@@ -164,8 +159,6 @@ public static class CaptureArgumentParser
             Url = url,
             Headers = headers
         };
-
-        return (options, outputPath);
     }
 
     private static bool TryReadValue(string[] args, ref int index, TextWriter errorOutput, out string value)
@@ -181,4 +174,18 @@ public static class CaptureArgumentParser
         index++;
         return true;
     }
+}
+
+public sealed class CaptureInput
+{
+    public string? Mode { get; init; }
+    public string? OutputPath { get; init; }
+    public string? ConfigFilePath { get; init; }
+    public string? ProjectPath { get; init; }
+    public string? Configuration { get; init; }
+    public string? Framework { get; init; }
+    public string? SwaggerDoc { get; init; }
+    public string? NswagConfigPath { get; init; }
+    public string? Url { get; init; }
+    public List<KeyValuePair<string, string>> Headers { get; init; } = new();
 }
