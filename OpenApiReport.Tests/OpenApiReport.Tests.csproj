@@ -20,4 +20,9 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\OpenApiReport.Core\OpenApiReport.Core.csproj" />
+    <ProjectReference Include="..\OpenAPI.Cli\OpenApiReport.Cli.csproj" />
+  </ItemGroup>
+
 </Project>
