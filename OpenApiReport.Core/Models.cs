@@ -18,7 +18,7 @@ public sealed class Operation
     public string? OperationId { get; init; }
     public List<string> Tags { get; } = new();
     public List<Parameter> Parameters { get; } = new();
-    public RequestBody? RequestBody { get; init; }
+    public RequestBody? RequestBody { get; set; }
     public Dictionary<string, Response> Responses { get; } = new(StringComparer.Ordinal);
 }
 

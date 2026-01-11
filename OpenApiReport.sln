@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36616.10 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenAPI.Cli", "OpenAPI.Cli\OpenAPI.Cli.csproj", "{E08C20B9-F306-4E1B-A20E-BA2920ED35F8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiReport.Cli", "OpenAPI.Cli\OpenApiReport.Cli.csproj", "{E08C20B9-F306-4E1B-A20E-BA2920ED35F8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiReport.Core", "OpenApiReport.Core\OpenApiReport.Core.csproj", "{4812D83A-9E50-4B7F-AC86-D8BF225329B7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiReport.Tests", "OpenApiReport.Tests\OpenApiReport.Tests.csproj", "{26663143-1C5F-4E0E-9144-BD9F9CBC9A58}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{E08C20B9-F306-4E1B-A20E-BA2920ED35F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E08C20B9-F306-4E1B-A20E-BA2920ED35F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E08C20B9-F306-4E1B-A20E-BA2920ED35F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4812D83A-9E50-4B7F-AC86-D8BF225329B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4812D83A-9E50-4B7F-AC86-D8BF225329B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4812D83A-9E50-4B7F-AC86-D8BF225329B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4812D83A-9E50-4B7F-AC86-D8BF225329B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26663143-1C5F-4E0E-9144-BD9F9CBC9A58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26663143-1C5F-4E0E-9144-BD9F9CBC9A58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26663143-1C5F-4E0E-9144-BD9F9CBC9A58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26663143-1C5F-4E0E-9144-BD9F9CBC9A58}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
